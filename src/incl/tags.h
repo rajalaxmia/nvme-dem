@@ -90,7 +90,7 @@
 #define URI_TARGET		"target"
 #define URI_HOST		"host"
 #define URI_DEM			"dem"
-#define URI_V1			"v1"
+#define URI_REDFISH		"redfish"
 #define URI_SUBSYSTEM		"subsystem"
 #define URI_PORTID		"portid"
 #define URI_NSID		"nsid"
@@ -106,7 +106,7 @@
 #define TARGET_LEN		(sizeof(URI_TARGET) - 1)
 #define HOST_LEN		(sizeof(URI_HOST) - 1)
 #define DEM_LEN			(sizeof(URI_DEM) - 1)
-#define V1_LEN			(sizeof(URI_V1) - 1)
+#define REDFISH_LEN		(sizeof(URI_REDFISH) - 1)
 #define PARM_MODE_LEN		(sizeof(URI_PARM_MODE) - 1)
 #define PARM_FABRIC_LEN		(sizeof(URI_PARM_FABRIC) - 1)
 
@@ -128,4 +128,18 @@
 #define NULL_BLK_DEVID		-1
 #define INVALID_DEVID		-2
 
+/* Redfish/Swordfish Specific */
+#define ODATA			"@odata.id"
+#define RF_SF_ID		"Id"
+#define SW_NAME			"Name"
+#define ODATA_TYPE		"@odata.type"
+#define MEMBER_CNT		"Members@odata.count"
+#define MEMBERS			"Members"
+
+/* redfish/swordfish Storage tags */
+#define SW_IDENTIFIERS		"Identifiers"
+#define SW_DURFORMAT		"DurableNameFormat"
+#define SW_DURNAME		"DurableName"
+
+#define SW_CONTROLLERS		"Controllers"
 #endif

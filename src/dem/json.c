@@ -45,7 +45,7 @@ static struct json_context *ctx;
 /* helper functions */
 
 static int find_array(json_t *array, const char *tag, char *val,
-		      json_t **result)
+			json_t **result)
 {
 	json_t			*iter;
 	json_t			*obj;
@@ -58,7 +58,7 @@ static int find_array(json_t *array, const char *tag, char *val,
 			continue;
 		obj = json_object_get(iter, tag);
 		if (obj && json_is_string(obj) &&
-		    strcmp(json_string_value(obj), val) == 0) {
+			strcmp(json_string_value(obj), val) == 0) {
 			if (result)
 				*result = iter;
 			return i;
@@ -72,7 +72,7 @@ static int find_array(json_t *array, const char *tag, char *val,
 }
 
 static int find_array_int(json_t *array, const char *tag, int val,
-		      json_t **result)
+			json_t **result)
 {
 	json_t			*iter;
 	json_t			*obj;
@@ -85,7 +85,7 @@ static int find_array_int(json_t *array, const char *tag, int val,
 			continue;
 		obj = json_object_get(iter, tag);
 		if (obj && json_is_integer(obj) &&
-		    json_integer_value(obj) == val) {
+			json_integer_value(obj) == val) {
 			if (result)
 				*result = iter;
 			return i;
@@ -157,6 +157,36 @@ static int list_array(json_t *array, char *tag, char *resp)
 	}
 
 	return p - resp;
+}
+
+//new json function to return array elements
+static int list_redfish_array(json_t *array, char *tag, char *resp)
+{
+	json_t			*obj;
+	void			*iter;
+	char			*p = resp;
+	int			 i;
+	int			 n, cnt = 0, ar_sz;
+
+	UNUSED(tag);
+
+	if (!json_is_array(array))
+		return -1;
+
+	ar_sz = json_array_size(array);
+
+	for (i = 0; i < ar_sz; i++) {
+		obj = json_array_get(array, i);
+		iter = json_object_iter(obj);
+		const char *key = json_object_iter_key(iter);
+//		printf("\nkey val is %s\n",json_object_iter_key(iter));
+		obj = json_object_get(obj, key);
+		n = sprintf(p, "%s: \"%s\"\n", key, json_string_value(obj));
+		p += n;
+		cnt += n;
+	}
+
+	return cnt;
 }
 
 static int filter_fabric(json_t *array, char *query, char *resp)
@@ -239,7 +269,7 @@ static int filter_mode(json_t *array, char *query, char *resp)
 }
 
 static int del_from_array(json_t *parent, const char *tag,
-			  char *value, const char *subgroup, char *subnqn)
+				char *value, const char *subgroup, char *subnqn)
 {
 	json_t			*array;
 	json_t			*obj;
@@ -265,8 +295,8 @@ err:
 }
 
 static int del_int_from_array(json_t *parent, const char *tag,
-			      char *value, const char *subgroup,
-			      char *key, int val)
+				char *value, const char *subgroup,
+				char *key, int val)
 {
 	json_t			*array;
 	json_t			*obj;
@@ -603,7 +633,7 @@ out:
 }
 
 int set_json_group_member(char *group, char *data, char *alias, char *tag,
-			  char *parent_tag, char *resp, char *_alias)
+				char *parent_tag, char *resp, char *_alias)
 {
 	json_t			*groups;
 	json_t			*parent;
@@ -680,7 +710,7 @@ out:
 }
 
 int del_json_group_member(char *group, char *member, char *tag,
-			  char *parent_tag, char *resp)
+				char *parent_tag, char *resp)
 {
 	json_t			*groups;
 	json_t			*parent;
@@ -746,7 +776,7 @@ static void rename_in_groups(char *tag, char *member, char *alias)
 		for (j = 0; j < num_members; j++) {
 			item = json_array_get(array, j);
 			if (json_is_string(item) &&
-			    !strcmp(member, json_string_value(item))) {
+				!strcmp(member, json_string_value(item))) {
 				json_string_set(item, alias);
 				break;
 			}
@@ -777,7 +807,7 @@ static void del_from_groups(char *tag, char *member)
 		for (j = 0; j < num_members; j++) {
 			item = json_array_get(array, j);
 			if (json_is_string(item) &&
-			    !strcmp(member, json_string_value(item))) {
+				!strcmp(member, json_string_value(item))) {
 				json_array_remove(array, j);
 				break;
 			}
@@ -1195,7 +1225,7 @@ int show_json_host(char *alias, char **resp)
 /* SUBSYSTEMS */
 
 int set_json_subsys(char *alias, char *subnqn, char *data, char *resp,
-		    struct subsystem *subsys)
+			struct subsystem *subsys)
 {
 	json_t			*targets;
 	json_t			*obj;
@@ -1277,7 +1307,7 @@ int set_json_subsys(char *alias, char *subnqn, char *data, char *resp,
 		strcpy(nqn, subnqn);
 		strcpy(subsys->nqn, nqn);
 		json_update_string_ex(iter, new, TAG_SUBNQN, value,
-				      subsys->nqn);
+					subsys->nqn);
 	}
 
 	json_update_int_ex(iter, new, TAG_ALLOW_ANY, value, subsys->access);
@@ -1404,7 +1434,7 @@ int set_json_oob_nsdevs(struct target *target, char *data)
 		list_add_tail(&nsdev->node, &target->device_list);
 
 		print_debug("Added %s %d:%d to %s '%s'",
-			    TAG_DEVID, devid, nsid, TAG_TARGET, alias);
+				TAG_DEVID, devid, nsid, TAG_TARGET, alias);
 
 found:
 		iter = json_object();
@@ -1422,8 +1452,8 @@ found:
 	list_for_each_entry_safe(nsdev, next, &target->device_list, node)
 		if (!nsdev->valid) {
 			print_debug("Removing %s %d:%d from %s '%s'",
-				    TAG_DEVID, nsdev->nsdev, nsdev->nsid,
-				    TAG_TARGET, alias);
+					TAG_DEVID, nsdev->nsdev, nsdev->nsid,
+					TAG_TARGET, alias);
 
 			list_del(&nsdev->node);
 		}
@@ -1482,28 +1512,28 @@ int set_json_oob_interfaces(struct target *target, char *data)
 		trtype = json_object_get(iter, TAG_TYPE);
 		if (!trtype || !json_is_string(trtype)) {
 			print_err("invalid json syntax. bad type %s '%s'",
-				  TAG_TARGET, alias);
+					TAG_TARGET, alias);
 			continue;
 		}
 
 		trfam = json_object_get(iter, TAG_FAMILY);
 		if (!trfam || !json_is_string(trfam)) {
 			print_err("invalid json syntax. bad family %s '%s'",
-				  TAG_TARGET, alias);
+					TAG_TARGET, alias);
 			continue;
 		}
 
 		tradr = json_object_get(iter, TAG_ADDRESS);
 		if (!tradr || !json_is_string(tradr)) {
 			print_err("invalid json syntax. bad address %s '%s'",
-				  TAG_TARGET, alias);
+					TAG_TARGET, alias);
 			continue;
 		}
 
 		list_for_each_entry(iface, &target->fabric_iface_list, node)
 			if (!strcmp(iface->type, json_string_value(trtype)) &&
-			    !strcmp(iface->fam, json_string_value(trfam)) &&
-			    !strcmp(iface->addr, json_string_value(tradr)))
+				!strcmp(iface->fam, json_string_value(trfam)) &&
+				!strcmp(iface->addr, json_string_value(tradr)))
 				goto found;
 
 		iface = malloc(sizeof(*iface));
@@ -1520,8 +1550,8 @@ int set_json_oob_interfaces(struct target *target, char *data)
 		list_add_tail(&iface->node, &target->fabric_iface_list);
 
 		print_debug("Added %s %s %s to %s '%s'",
-			    iface->type, iface->fam, iface->addr,
-			    TAG_TARGET, alias);
+				iface->type, iface->fam, iface->addr,
+				TAG_TARGET, alias);
 
 found:
 		iter = json_object();
@@ -1537,8 +1567,8 @@ found:
 	list_for_each_entry_safe(iface, next, &target->fabric_iface_list, node)
 		if (!iface->valid) {
 			print_debug("Removing %s %s %s from %s '%s'",
-				    iface->type, iface->fam, iface->addr,
-				    TAG_TARGET, alias);
+					iface->type, iface->fam, iface->addr,
+					TAG_TARGET, alias);
 
 			list_del(&iface->node);
 		}
@@ -1634,7 +1664,7 @@ int set_json_inb_fabric_iface(struct target *target, struct fabric_iface *iface)
 /* PORTID */
 
 int set_json_portid(char *target, int id, char *data, char *resp,
-		    struct portid *portid)
+			struct portid *portid)
 {
 	json_t			*targets;
 	json_t			*obj;
@@ -1720,7 +1750,7 @@ int del_json_portid(char *alias, int portid, char *resp)
 	}
 
 	ret = del_int_from_array(targets, TAG_ALIAS, alias, TAG_PORTIDS,
-				 TAG_PORTID, portid);
+					TAG_PORTID, portid);
 	if (ret) {
 		sprintf(resp,
 			"Unable to delete %s '%d' from %s '%s'",
@@ -1843,7 +1873,7 @@ int del_json_ns(char *alias, char *subnqn, int ns, char *resp)
 	}
 
 	ret = del_int_from_array(array, TAG_SUBNQN, subnqn, TAG_NSIDS,
-				 TAG_NSID, ns);
+					TAG_NSID, ns);
 	if (ret) {
 		sprintf(resp,
 			"Unable to delete %s '%d' from %s '%s in %s '%s'",
@@ -1918,8 +1948,414 @@ int list_json_target(char *query, char **resp)
 	return 0;
 }
 
+
+/*int list_json_redfish_elements(char *query, char **resp, int )
+{
+	json_t			*sf_object;
+	char			*p = *resp;
+	char			*new;
+	int			 n;
+	int			 cnt;
+	int			 max = BODY_SIZE - 32;
+
+	UNUSED(query);
+
+	sf_object = json_object_get(ctx->sf_root, SW_NAME);
+	if (sf_object && json_is_string(sf_object)) {
+		n = sprintf(p, "%s : %s",
+			SW_NAME, json_string_value(sf_object));
+		p += n;
+	}
+
+	if (n > max) {
+		max += n - BODY_SIZE;
+		new = realloc(*resp, max);
+		if (!new)
+			goto out;
+		*resp = new;
+		p = new + cnt;
+	}
+
+out:
+	return 0;
+} */
+
+int list_json_redfish_collection(char *query, char **resp, int n)
+{
+	json_t			*sf_object;
+//	json_t			*arr_object;
+	char			*p = *resp + n;
+//	int			 array_sz, i;
+	int			 cnt;
+	char			*new;
+	int			 max = BODY_SIZE - 32;
+
+	UNUSED(query);
+	UNUSED(resp);
+
+	cnt = n;
+
+	sf_object = json_object_get(ctx->sf_root, MEMBER_CNT);
+	if (sf_object && json_is_integer(sf_object)) {
+		n = sprintf(p, "%s : %d\n",
+				MEMBER_CNT, (int)json_integer_value(sf_object));
+		p += n;
+		cnt += n;
+	}
+	if (n > max) {
+		max += n - BODY_SIZE;
+		new = realloc(*resp, max);
+		if (!new)
+			goto out;
+		*resp = new;
+		p = new + cnt;
+	}
+
+	sf_object = json_object_get(ctx->sf_root, MEMBERS);
+	if (!sf_object)
+		return 0;
+//	sf_object is main object - input
+//	array_sz is just a variable to hold array size
+//	i is just variable for iterating
+//	arr_object is a variable to hold array obj
+//	ODATA is ODATA type
+//	p is the input variable pointer to resp
+//	n is used to hold count of each element
+//	cnt is total count
+
+//	json_redfish_get_array(sf_object, array_sz, i, arr_object,
+//			ODATA, p, n, cnt);
+
+//	cnt += n;
+
+	n = list_redfish_array(sf_object, "dummy", p);
+/*	array_sz = json_array_size(sf_object);
+	if (!array_sz)
+		return 0;
+	for (i = 0; i < array_sz; i++) {
+		arr_object = json_array_get(sf_object, i);
+		if (!json_is_object(arr_object))
+			continue;
+		arr_object = json_object_get(arr_object, ODATA);
+		json_string_withtag(arr_object, p, n, ODATA);
+		cnt += n;
+
+	}
+*/
+	cnt += n;
+out:
+	return cnt;
+}
+
+int list_json_redfish_Storage(char *query, char **resp, int n)
+{
+/*	json_t			*sf_object;
+	json_t			*arr_object;
+	char			*p = *resp + n;
+	int			 cnt, array_sz, i;
+	char			*new;
+	int			 max = BODY_SIZE - 32;
+*/
+
+	UNUSED(query);
+	UNUSED(resp);
+
+	// identifiers array
+
+	// Controllers nested obj with odata.id
+	// volumens nested obj with with odata.id
+	//
+	return n;
+}
+
+int get_json_redfish_all(json_t *sf_object, char **resp, int n1)
+{
+	//json_error_t		 error;
+
+	json_t			*obj, *obj1;
+	void			*iter;
+	char			*p = *resp + n1;
+	char			*new;
+	int			 cnt = n1, i;
+	int			 n = 0;
+	int			 ar_sz = 0;
+	int			 tmp = 0;
+	int                      max = BODY_SIZE - 256;
+
+	tmp = tmp;
+	tmp = json_typeof(sf_object);
+
+	n = sprintf(p, "{ \n");
+	p += n;
+	cnt += n;
+
+	if (cnt > max) {
+		max = cnt + BODY_SIZE;
+		new = realloc(*resp, max);
+		if (!new)
+			return -1;
+		*resp = new;
+		p = new + cnt;
+	}
+
+	iter = json_object_iter(sf_object);
+	while (iter) {
+		const char *key = json_object_iter_key(iter);
+		obj = json_object_get(sf_object, key);
+
+		n = sprintf(p, "\"%s\": ", key);
+		p += n;
+		cnt += n;
+
+		if (json_is_boolean(obj)) {
+			n = sprintf(p, "\"%d\",\n", json_boolean_value(obj));
+		} else if (json_is_integer(obj)) {
+//			json_integer_withtag(obj, p, n, key);
+			n = sprintf(p, "\"%lld\",\n", json_integer_value(obj));
+		} else if (json_is_string(obj)) {
+//                        json_string_withtag(obj, p, n, key);
+			n = sprintf(p, "\"%s\",\n", json_string_value(obj));
+		} else if (json_is_object(obj)) {
+
+			n = get_json_redfish_all(obj, resp, cnt);
+			cnt = n;
+			cnt = cnt - 2;
+			p = *resp + cnt;
+			n = sprintf(p, ",\n");
+		} else if (json_is_array(obj)) {
+			n = sprintf(p, "[\n");
+			p += n;
+			cnt += n;
+
+			ar_sz = json_array_size(obj);
+			for (i = 0; i < ar_sz; i++) {
+				obj1 = json_array_get(obj, i);
+				if (json_is_string(obj1)) {
+					n = sprintf(p, "\"%s\", ",
+						json_string_value(obj1));
+					p += n;
+					cnt += n;
+
+				} else if (json_is_object(obj1)) {
+					n = get_json_redfish_all(obj1,
+							resp, cnt);
+					cnt = n;
+				}
+			}
+			cnt = cnt - 2;
+			p = *resp + cnt;
+			n = sprintf(p, "\n],\n");
+		} else {
+			printf("Error: Invalid JSON Object\n");
+		}
+
+		p += n;
+		cnt += n;
+
+		iter = json_object_iter_next(sf_object, iter);
+	}
+
+	cnt = cnt-2;
+	p = *resp + cnt;
+	n = sprintf(p, "\n},\n");
+	p += n;
+	cnt += n;
+
+	return cnt;
+}
+
+int get_json_redfish_body(char *data, char **resp, int n)
+{
+	json_error_t		 error;
+
+	json_t			*obj;
+	json_t			*sf_object;
+	void			*iter;
+	char			*p = *resp + n;
+	int			 cnt = n;
+	char                    *new;
+	int                      max = BODY_SIZE - 32;
+
+	//UNUSED(p);
+
+	obj = json_loads(data, JSON_DECODE_ANY, &error);
+	if (!obj)
+		return invalid_json_syntax(*resp);
+
+	if (n > max) {
+		max += n - BODY_SIZE;
+		new = realloc(*resp, max);
+		if (!new)
+			return -1;
+		*resp = new;
+		p = new + cnt;
+	}
+
+	iter = json_object_iter(obj);
+	while (iter) {
+		const char *key = json_object_iter_key(iter);
+	//	obj1 = json_object_get(obj, key);
+		sf_object = json_object_get(ctx->sf_root, key);
+		printf("\nKey %s: Val %s", key, json_string_value(sf_object));
+		n = sprintf(p, "%s: \"%s\"\n", key,
+				json_string_value(sf_object));
+		p += n;
+		cnt += n;
+		iter = json_object_iter_next(obj, iter);
+
+	}
+	printf("\nDone: Body Message\n");
+/*	ar_sz = json_array_size(array);
+
+	for (i = 0; i < ar_sz; i++) {
+		obj = json_array_get(array, i);
+		iter = json_object_iter(obj);
+		const char *key = json_object_iter_key(iter);
+//		printf("\nkey val is %s\n",json_object_iter_key(iter));
+		obj = json_object_get(obj, key);
+		n = sprintf(p, "%s: \"%s\"\n", key, json_string_value(obj));
+		p += n;
+		cnt += n;
+	}
+*/
+	return cnt;
+
+}
+
+int list_json_redfish_singleton(char *query, char **resp, int n)
+{
+	json_t			*sf_object;
+//	char			*p = *resp + n;
+	int			 cnt = -1;
+//	char			*new;
+//	int			 max = BODY_SIZE - 32;
+	char			 r_obj[256];
+
+	UNUSED(query);
+	UNUSED(resp);
+	UNUSED(n);
+
+	sf_object = json_object_get(ctx->sf_root, ODATA_TYPE);
+	if (!sf_object || !json_is_string(sf_object))
+		return -1;
+	strcpy(r_obj, json_string_value(sf_object));
+
+	if ((strstr(r_obj, "CapacitySource")))
+		cnt = list_json_redfish_Storage(query, resp, n);
+/*	else if ((strstr(r_obj, "Chassis")))
+	else if ((strstr(r_obj, "ComputerSystem")))
+	else if ((strstr(r_obj, "Connection")))
+	else if ((strstr(r_obj, "Drive")))
+	else if ((strstr(r_obj, "Endpoint")))
+	else if ((strstr(r_obj, "Fabric")))
+	else if ((strstr(r_obj, "NVMeDomain")))
+	else if ((strstr(r_obj, "StorageController")))
+	else if ((strstr(r_obj, "StoragePool")))
+*/
+	else if ((strstr(r_obj, "Storage")))
+		cnt = list_json_redfish_Storage(query, resp, n);
+/*	else if ((strstr(r_obj, "Thermal")))
+	else if ((strstr(r_obj, "Volume")))
+	else if ((strstr(r_obj, "Thermal")))
+	else if ((strstr(r_obj, "Volume")))
+	else if ((strstr(r_obj, "Zone")))
+*/
+	else
+		return cnt;
+
+	return cnt;
+
+}
+
+int list_json_redfish(char *query, char *body, char **resp)
+{
+	json_t			*sf_object;
+	char			*p = *resp;
+	int			 all_data = 1;
+	char			*new;
+	int			 n;
+	int			 cnt = 0;
+	int			 max = BODY_SIZE - 32;
+
+	UNUSED(query);
+	UNUSED(body);
+
+	if (all_data) {
+	//	obj = json_loads(data, JSON_DECODE_ANY, &error);
+	//	sf_object = json_object_get(ctx->sf_root, ODATA);
+		n = get_json_redfish_all(ctx->sf_root, resp, cnt);
+		cnt = n - 2;
+		p = *resp + cnt;
+		n = sprintf(p, "\n ");
+	} else {
+
+		sf_object = json_object_get(ctx->sf_root, ODATA);
+		if (sf_object && json_is_string(sf_object)) {
+			n = sprintf(p, "%s : %s\n", ODATA,
+					json_string_value(sf_object));
+			p += n;
+			cnt += n;
+		}
+		if (n > max) {
+			max += n - BODY_SIZE;
+			new = realloc(*resp, max);
+			if (!new)
+				goto out;
+			*resp = new;
+			p = new + cnt;
+		}
+
+		sf_object = json_object_get(ctx->sf_root, SW_NAME);
+		if (sf_object && json_is_string(sf_object)) {
+			n = sprintf(p, "%s : %s\n", SW_NAME,
+					json_string_value(sf_object));
+			p += n;
+			cnt += n;
+		}
+		if (n > max) {
+			max += n - BODY_SIZE;
+			new = realloc(*resp, max);
+			if (!new)
+				goto out;
+			*resp = new;
+			p = new + cnt;
+		}
+
+		sf_object = json_object_get(ctx->sf_root, ODATA_TYPE);
+		if (sf_object && json_is_string(sf_object)) {
+			n = sprintf(p, "%s : %s\n", ODATA_TYPE,
+					json_string_value(sf_object));
+			p += n;
+			cnt += n;
+			if (!(strstr(json_string_value(sf_object),
+							"Collection")))
+				n = list_json_redfish_singleton(query, resp,
+						cnt);
+			else
+				n = list_json_redfish_collection(query, resp,
+						cnt);
+		}
+
+		cnt = n;
+
+		if (n > 0)
+			p = *resp + n;
+		//get the specficic property in the body message
+		if (strcmp(body, "")) {
+			n = get_json_redfish_body(body, resp, cnt);
+			if (n > 0) {
+				cnt = n;
+				p = *resp + cnt;
+			}
+		}
+	}
+
+out:
+	return 0;
+}
+
 int set_json_inb_interface(char *alias, char *data, char *resp,
-			   union sc_iface *iface)
+				union sc_iface *iface)
 {
 	json_t			*targets;
 	json_t			*new;
@@ -1955,16 +2391,16 @@ int set_json_inb_interface(char *alias, char *data, char *resp,
 
 	iter = json_object();
 	json_update_string_ex(iter, newobj, TAG_TYPE, value,
-			      iface->inb.portid->type);
+				iface->inb.portid->type);
 	json_update_string_ex(iter, newobj, TAG_FAMILY, value,
-			      iface->inb.portid->family);
+				iface->inb.portid->family);
 	json_update_string_ex(iter, newobj, TAG_ADDRESS, value,
-			      iface->inb.portid->address);
+				iface->inb.portid->address);
 	json_update_int_ex(iter, newobj, TAG_TRSVCID, value,
-			   iface->inb.portid->port_num);
+				iface->inb.portid->port_num);
 
 	print_debug("Added %s:%d", iface->inb.portid->address,
-		    iface->inb.portid->port_num);
+			iface->inb.portid->port_num);
 
 	json_object_set(obj, TAG_INTERFACE, iter);
 
@@ -1973,7 +2409,7 @@ int set_json_inb_interface(char *alias, char *data, char *resp,
 	return 0;
 }
 int set_json_oob_interface(char *alias, char *data, char *resp,
-			   union sc_iface *iface)
+				union sc_iface *iface)
 {
 	json_t			*targets;
 	json_t			*new;
@@ -2011,7 +2447,7 @@ int set_json_oob_interface(char *alias, char *data, char *resp,
 	iter = json_object();
 	json_update_string(iter, newobj, TAG_IFFAMILY, value);
 	json_update_string_ex(iter, newobj, TAG_IFADDRESS, value,
-			      iface->oob.address);
+				iface->oob.address);
 	json_update_string_ex(iter, newobj, TAG_IFPORT, value, port);
 
 	iface->oob.port = atoi(port);
@@ -2087,7 +2523,7 @@ static void add_nsdevice(json_t *parent, json_t *newparent)
 			if (!json_is_string(tmp))
 				continue;
 			if (strcmp(json_string_value(iter),
-				   json_string_value(tmp)) == 0)
+					json_string_value(tmp)) == 0)
 				break;
 		}
 		if (n == j)
@@ -2158,7 +2594,7 @@ int add_json_target(char *alias, char *resp)
 }
 
 int update_json_target(char *alias, char *data, char *resp,
-		       struct target *target)
+			struct target *target)
 {
 	json_t			*targets;
 	json_t			*iter = NULL;
@@ -2268,24 +2704,24 @@ int update_json_target(char *alias, char *data, char *resp,
 			json_object_del(obj, TAG_ADDRESS);
 			json_object_del(obj, TAG_TRSVCID);
 			json_update_string_ex(obj, newobj, TAG_IFFAMILY,
-					      value, iface->oob.address);
+					value, iface->oob.address);
 			json_update_string_ex(obj, newobj, TAG_IFADDRESS,
-					      value, iface->oob.address);
+					value, iface->oob.address);
 			json_update_int_ex(obj, newobj, TAG_IFPORT,
-					   value, iface->oob.port);
+					value, iface->oob.port);
 		} else {
 			json_object_del(obj, TAG_IFFAMILY);
 			json_object_del(obj, TAG_IFADDRESS);
 			json_object_del(obj, TAG_IFPORT);
 
 			json_update_string_ex(obj, newobj, TAG_TYPE, value,
-					      iface->inb.portid->type);
+						iface->inb.portid->type);
 			json_update_string_ex(obj, newobj, TAG_FAMILY, value,
-					      iface->inb.portid->family);
+						iface->inb.portid->family);
 			json_update_string_ex(obj, newobj, TAG_ADDRESS, value,
-					      iface->inb.portid->address);
+						iface->inb.portid->address);
 			json_update_int_ex(obj, newobj, TAG_TRSVCID, value,
-					   iface->inb.portid->port_num);
+						iface->inb.portid->port_num);
 		}
 	}
 out2:
@@ -2323,7 +2759,7 @@ int show_json_target(char *alias, char **resp)
 }
 
 int set_json_acl(char *tgt, char *subnqn, char *alias, char *data,
-		 char *resp, char *newalias, char *hostnqn)
+			char *resp, char *newalias, char *hostnqn)
 {
 	json_t			*targets;
 	json_t			*hosts;

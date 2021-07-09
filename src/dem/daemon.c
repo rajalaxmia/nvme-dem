@@ -222,7 +222,7 @@ static void show_help(char *app)
 #endif
 
 	print_info("Usage: %s %s {-p <port>} {-r <root>} {-c <cert_file>}",
-		   app, arg_list);
+			app, arg_list);
 #ifdef CONFIG_DEBUG
 	print_info("  -q - quiet mode, no debug prints");
 	print_info("  -d - run as a daemon process (default is standalone)");
@@ -231,9 +231,9 @@ static void show_help(char *app)
 	print_info("  -s - run as a standalone process (default is daemon)");
 #endif
 	print_info("  -p - HTTP interface: port (default %s)",
-		   DEFAULT_HTTP_PORT);
+			DEFAULT_HTTP_PORT);
 	print_info("  -r - HTTP interface: root (default %s)",
-		   DEFAULT_HTTP_ROOT);
+			DEFAULT_HTTP_ROOT);
 	print_info("  -c - HTTP interface: SSL cert file (default no SSL)");
 }
 
@@ -336,7 +336,7 @@ static int init_mg_mgr(struct mg_mgr *mgr, char *ssl_cert)
 	c = mg_bind_opt(mgr, s_http_port, ev_handler, bind_opts);
 	if (c == NULL) {
 		print_err("mongoose server - port %s: %s",
-			  s_http_port, *bind_opts.error_string);
+				s_http_port, *bind_opts.error_string);
 		return 1;
 	}
 
@@ -385,7 +385,7 @@ static int init_interface_threads(pthread_t **listen_threads)
 
 	for (i = 0; i < num_interfaces; i++) {
 		if (pthread_create(&pthreads[i], &pthread_attr,
-				   interface_thread, &(interfaces[i]))) {
+				interface_thread, &(interfaces[i]))) {
 			print_err("failed to start transport thread");
 			free(pthreads);
 			pthread_attr_destroy(&pthread_attr);
@@ -402,7 +402,7 @@ static int init_interface_threads(pthread_t **listen_threads)
 }
 
 static int dq_exists(struct target *target, struct subsystem *subsys,
-	       struct portid *portid)
+		struct portid *portid)
 {
 	struct ctrl_queue	*dq;
 	struct host		*host;
@@ -421,14 +421,14 @@ static int dq_exists(struct target *target, struct subsystem *subsys,
 }
 
 void create_discovery_queue(struct target *target, struct subsystem *subsys,
-			    struct portid *portid)
+				struct portid *portid)
 {
 	struct ctrl_queue	*dq;
 	struct host		*host;
 
 	if (subsys &&
-	    (!is_restricted(subsys) || list_empty(&subsys->host_list) ||
-	     dq_exists(target, subsys, portid)))
+		(!is_restricted(subsys) || list_empty(&subsys->host_list) ||
+		dq_exists(target, subsys, portid)))
 		return;
 
 	dq = malloc(sizeof(*dq));
@@ -508,12 +508,12 @@ static void cleanup_target_list(void)
 
 	list_for_each_entry_safe(target, next_target, target_list, node) {
 		list_for_each_entry_safe(subsys, next_subsys,
-					 &target->subsys_list, node) {
+					&target->subsys_list, node) {
 			list_for_each_entry_safe(host, next_host,
-						 &subsys->host_list, node)
+						&subsys->host_list, node)
 				free(host);
 			list_for_each_entry_safe(logpage, next_logpage,
-						 &subsys->logpage_list, node)
+						&subsys->logpage_list, node)
 				free(logpage);
 
 			free(subsys);
@@ -522,11 +522,11 @@ static void cleanup_target_list(void)
 		list_del(&target->node);
 
 		list_for_each_entry_safe(logpage, next_logpage,
-					 &target->unattached_logpage_list, node)
+					&target->unattached_logpage_list, node)
 			free(logpage);
 
 		list_for_each_entry_safe(dq, next_dq,
-					 &target->discovery_queue_list, node) {
+					&target->discovery_queue_list, node) {
 			if (dq->connected)
 				disconnect_ctrl(dq, 1);
 
@@ -574,10 +574,11 @@ static void set_signature(void)
 	char			*sig;
 	int			 len;
 
+	printf("\n Set_signature1 ");
 	fd = fopen(SIGNATURE_FILE, "r");
 	if (!fd)
 		return;
-
+	printf(" Set_signature2 ");
 	strcpy(buf, "Basic ");
 	fgets(buf + 6, sizeof(buf) - 7, fd);
 
@@ -597,6 +598,7 @@ static void set_signature(void)
 
 	s_signature_user = mg_mk_str_n(sig, len);
 	s_signature = &s_signature_user;
+	printf(" Set_signature3 ");
 
 	free(sig);
 out:
@@ -650,7 +652,7 @@ int main(int argc, char *argv[])
 	signalled = stopped = 0;
 
 	print_info("Starting server on port %s, serving '%s'",
-		   s_http_port, s_http_server_opts.document_root);
+			s_http_port, s_http_server_opts.document_root);
 
 	if (init_interface_threads(&listen_threads))
 		goto out3;

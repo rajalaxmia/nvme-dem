@@ -482,7 +482,7 @@ static int cfgfs_delete_portid(int portid)
 {
 	char			 dir[MAXPATHLEN];
 	char			 path[MAXPATHLEN];
-	char			 file[MAXPATHLEN];
+	char			 file[MAXPATHLEN+256];
 	DIR			*subdir;
 	struct dirent		*entry;
 	int			 ret;
@@ -500,7 +500,10 @@ static int cfgfs_delete_portid(int portid)
 		goto out;
 
 	for_each_dir(entry, subdir) {
-		sprintf(file, "%s/%s", path, entry->d_name);
+//		sprintf(file, "%s/%s", path, entry->d_name);
+		unsigned long l = sprintf(file, "%s/%s", path, entry->d_name);
+		if (l >= sizeof(path))
+			file[sizeof(path)-1] = 0;
 		remove(file);
 	}
 	closedir(subdir);
@@ -683,7 +686,7 @@ static int create_device(char *name)
 	if (name) {
 		sscanf(name, SYSFS_DEVICE, &device->devid, &device->nsid);
 		print_debug("adding device nvme%dn%d",
-			    device->devid, device->nsid);
+				device->devid, device->nsid);
 	} else {
 		device->devid = NULL_BLK_DEVID;
 		device->nsid = 0;
@@ -734,7 +737,7 @@ static int cfgfs_enumerate_devices(void)
 
 			for_each_dir(subentry, subdir)
 				if (strncmp(subentry->d_name, SYSFS_PREFIX,
-					    SYSFS_PREFIX_LEN) == 0) {
+						SYSFS_PREFIX_LEN) == 0) {
 					ret = create_device(subentry->d_name);
 					if (ret)
 						goto out;

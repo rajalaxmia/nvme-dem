@@ -166,6 +166,23 @@ static void get_interface(char *resp)
 	sprintf(resp, "]}");
 }
 
+static int redfish_get_request(char *p[], int n, char *resp)
+{
+	if (n != 1)
+		goto bad;
+
+	if (strcmp(p[0], URI_NSDEV) == 0)
+		get_nsdev(resp);
+	else if (strcmp(p[0], URI_INTERFACE) == 0)
+		get_interface(resp);
+	else
+		goto bad;
+
+	return 0;
+bad:
+	return bad_request(resp);
+}
+
 static int get_request(char *p[], int n, char *resp)
 {
 	if (n != 1)
@@ -682,8 +699,24 @@ bad:
 	return bad_request(resp);
 }
 
+static int handle_redfish_requests(char *p[], int n, struct http_message *hm,
+					char *resp)
+{
+	int			 ret = 0;
+
+	if (is_equal(&hm->method, &s_get_method))
+		ret = redfish_get_request(p, n, resp);
+//	else if (is_equal(&hm->method, &s_post_method))
+//		ret = redfish_post_request(p, n, &hm->body, resp);
+//	else if (is_equal(&hm->method, &s_delete_method))
+//		ret = redfish_delete_request(p, n, resp);
+	else
+		ret = bad_request(resp);
+
+	return ret;
+}
 static int handle_target_requests(char *p[], int n, struct http_message *hm,
-				  char *resp)
+					char *resp)
 {
 	int			 ret;
 
@@ -722,7 +755,7 @@ void handle_http_request(struct mg_connection *c, void *ev_data)
 	}
 
 	print_debug("%.*s %.*s", (int) hm->method.len, hm->method.p,
-		    (int) hm->uri.len, hm->uri.p);
+			(int) hm->uri.len, hm->uri.p);
 
 	if (hm->body.len)
 		print_debug("%.*s", (int) hm->body.len, hm->body.p);

@@ -54,42 +54,49 @@ int set_json_group_target(char *alias, char *data, char *resp);
 int set_json_group_host(char *host, char *data, char *resp);
 int del_json_group(char *grp, char *resp);
 int set_json_group_member(char *group, char *data, char *alias, char *tag,
-			  char *parent_tag, char *resp, char *_alias);
+				char *parent_tag, char *resp, char *_alias);
 int del_json_group_member(char *group, char *member, char *tag,
-			  char *parent_tag, char *resp);
+				char *parent_tag, char *resp);
 
 int add_json_target(char *alias, char *resp);
 int update_json_target(char *alias, char *data, char *resp,
-		       struct target *target);
+			struct target *target);
 int list_json_target(char *query, char **resp);
 int show_json_target(char *alias, char **resp);
 int del_json_target(char *alias, char *resp);
 
+int list_json_redfish(char *query, char *body, char **resp);
+int list_json_redfish_singleton(char *query, char **resp, int n);
+int list_json_redfish_collection(char *query, char **resp, int n);
+
+int get_json_redfish_all(json_t *sf_object, char **resp, int n);
+int get_json_redfish_body(char *data, char **resp, int n);
+
 int add_json_host(char *alias, char *resp);
 int update_json_host(char *alias, char *data, char *resp,
-		     char *newalias, char *nqn);
+			char *newalias, char *nqn);
 int list_json_host(char **resp);
 int show_json_host(char *alias, char **resp);
 int del_json_host(char *alias, char *resp, char *nqn);
 int get_json_host_nqn(char *host, char *nqn);
 
 int set_json_subsys(char *alias, char *subnqn, char *data, char *resp,
-		    struct subsystem *subsys);
+			struct subsystem *subsys);
 int del_json_subsys(char *alias, char *subnqn, char *resp);
 
 int set_json_inb_interface(char *target, char *data, char *resp,
-			   union sc_iface *face);
+			union sc_iface *face);
 int set_json_oob_interface(char *target, char *data, char *resp,
-			   union sc_iface *face);
+			union sc_iface *face);
 int set_json_portid(char *target, int id, char *data, char *resp,
-		    struct portid *portid);
+			struct portid *portid);
 int del_json_portid(char *alias, int id, char *resp);
 
 int set_json_ns(char *alias, char *subnqn, char *data, char *resp,
 		struct ns *ns);
 int del_json_ns(char *alias,  char *subnqn, int ns, char *resp);
 int set_json_acl(char *tgt, char *subnqn, char *alias, char *data,
-		 char *resp, char *newalias, char *hostnqn);
+			char *resp, char *newalias, char *hostnqn);
 int del_json_acl(char *alias,  char *subnqn, char *host, char *resp);
 
 int list_group(char *resp);
@@ -100,9 +107,9 @@ int set_group_target(char *alias, char *data, char *resp);
 int set_group_host(char *host, char *data, char *resp);
 int del_group(char *grp, char *resp);
 int set_group_member(char *group, char *data, char *alias, char *tag,
-		     char *parent_tag, char *resp);
+			char *parent_tag, char *resp);
 int del_group_member(char *group, char *member, char *tag, char *parent_tag,
-		     char *resp);
+			char *resp);
 
 int add_target(char *alias, char *resp);
 int update_target(char *target, char *data, char *resp);
@@ -121,7 +128,7 @@ int del_subsys(char *alias, char *subnqn, char *resp);
 
 int set_interface(char *target, char *data, char *resp);
 int set_portid(char *target, int portid, char *data,
-	       char *resp);
+		char *resp);
 int del_portid(char *alias, int portid, char *resp);
 
 int set_ns(char *alias, char *subnqn, char *data, char *resp);
@@ -136,7 +143,7 @@ int set_json_oob_interfaces(struct target *target, char *data);
 int set_json_inb_nsdev(struct target *target, struct nsdev *nsdev);
 int init_json_inb_fabric_iface(struct target *target);
 int set_json_inb_fabric_iface(struct target *target,
-			      struct fabric_iface *iface);
+				struct fabric_iface *iface);
 
 int update_signature(char *data, char *resp);
 
@@ -145,7 +152,9 @@ int update_signature(char *data, char *resp);
 struct json_context {
 	pthread_spinlock_t	 lock;
 	json_t			*root;
+	json_t			*sf_root;
 	char			 filename[128];
+	char			*sf_filename;
 };
 
 /* json parsing helpers */
@@ -214,7 +223,7 @@ struct json_context {
 		if (z) { \
 			if (json_is_object(w)) \
 				json_set_int(w, y, \
-					     json_integer_value(z)); \
+					json_integer_value(z)); \
 			else \
 				fprintf(stderr, "%s(%d) Bad type\n", \
 					__func__, __LINE__); \
@@ -239,7 +248,7 @@ struct json_context {
 		if (z) { \
 			if (json_is_object(w)) { \
 				json_set_int(w, y, \
-					     json_integer_value(z)); \
+					json_integer_value(z)); \
 				res = json_integer_value(z); \
 			} else \
 				fprintf(stderr, "%s(%d) Bad type\n", \
@@ -257,7 +266,7 @@ struct json_context {
 #define array_json_string(obj, p, i, n)				\
 	do {							\
 		n = sprintf(p, "%s\"%s\"", i ? "," : "",	\
-			    json_string_value(obj));		\
+			json_string_value(obj));		\
 		p += n;						\
 	} while (0)
 #define start_json_array(tag, p, n)				\
@@ -269,4 +278,38 @@ struct json_context {
 	do {							\
 		n = sprintf(p, "]");				\
 		p += n;						\
+	} while (0)
+
+/* New json helpers */
+
+
+/* prints json string with tag*/
+#define json_integer_withtag(obj, p, n, tag)			\
+	do {							\
+		n = sprintf(p, "%s: \"%lld\"\n", tag,		\
+			json_integer_value(obj));		\
+		p += n;						\
+	} while (0)
+
+
+#define json_string_withtag(obj, p, n, tag)			\
+	do {							\
+		n = sprintf(p, "%s: \"%s\"\n", tag,		\
+			json_string_value(obj));		\
+		p += n;						\
+	} while (0)
+#define json_redfish_get_array(obj, az, i, ar_obj, tag, p, n, cnt) \
+	do {							\
+		az = json_array_size(obj);			\
+		if (!az)					\
+			n = 0;					\
+		else						\
+		for (i = 0; i < az; i++) {			\
+			ar_obj = json_array_get(obj, i);	\
+			if (!json_is_object(ar_obj))		\
+				continue;			\
+			ar_obj = json_object_get(ar_obj, tag);	\
+			json_string_withtag(ar_obj, p, n, tag); \
+			cnt += n;				\
+		}						\
 	} while (0)

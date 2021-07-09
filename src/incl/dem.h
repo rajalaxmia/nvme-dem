@@ -110,12 +110,13 @@ static inline void gen_uuid(char *uuid)
 	p[3] |= 0x8000;
 
 	snprintf(uuid, UUID_LEN + 1, UUID_FORMAT,
-		 U32_MASK & p[0], U16_MASK & p[1], U16_MASK & p[2],
-		 U16_MASK & p[3], U32_MASK & p[4], U16_MASK & p[5]);
+		U32_MASK & p[0], U16_MASK & p[1], U16_MASK & p[2],
+		U16_MASK & p[3], U32_MASK & p[4], U16_MASK & p[5]);
 }
 
 #define PATH_NVME_FABRICS	"/dev/nvme-fabrics"
 #define PATH_NVMF_DEM_DISC	"/etc/nvme/nvmeof-dem/"
+#define PATH_NVMF_DEM_REDFISH	"/home/raj"
 #define NUM_CONFIG_ITEMS	3
 #define CONFIG_TYPE_SIZE	8
 #define CONFIG_FAMILY_SIZE	8
@@ -190,7 +191,7 @@ int client_connect(struct endpoint *ep, void *data, int bytes);
 void disconnect_endpoint(struct endpoint *ep, int shutdown);
 
 int send_get_log_page(struct endpoint *ep, int log_size,
-		      struct nvmf_disc_rsp_page_hdr **log);
+			struct nvmf_disc_rsp_page_hdr **log);
 int send_get_features(struct endpoint *ep, u8 fid, u64 *result);
 int send_set_features(struct endpoint *ep, u8 fid, u32 dword11);
 int send_async_event_request(struct endpoint *ep);
@@ -204,7 +205,7 @@ int process_nvme_rsp(struct endpoint *ep, int ignore_status, u64 *result);
 
 void print_discovery_log(struct nvmf_disc_rsp_page_hdr *log, int numrec);
 int get_logpages(struct ctrl_queue *dq, struct nvmf_disc_rsp_page_hdr **logp,
-		 u32 *numrec);
+			u32 *numrec);
 
 const char *trtype_str(u8 trtype);
 const char *adrfam_str(u8 adrfam);

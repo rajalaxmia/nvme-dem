@@ -43,7 +43,8 @@ static const struct mg_str s_options_method = MG_MK_STR("OPTIONS");
 static const struct mg_str s_delete_method = MG_MK_STR("DELETE");
 static const struct mg_str s_authorization = MG_MK_STR("Authorization");
 static const struct mg_str s_signature_default =
-	MG_MK_STR("Basic QjU6v9wxOTU4QGBlgPztOCQ6QTsD");
+//	MG_MK_STR("Basic QjU6v9wxOTU4QGBlgPztOCQ6QTsD");
+	MG_MK_STR("Basic ZGVtOm52bWVvZg");
 struct mg_str s_signature_user;
 struct mg_str *s_signature = (struct mg_str *) &s_signature_default;
 
@@ -137,11 +138,11 @@ static int get_dem_request(char *verb, char *resp)
 		resp += n;
 
 		n = sprintf(resp, JSSTR ",", TAG_ADDRESS,
-			    iface->address);
+				iface->address);
 		resp += n;
 
 		n = sprintf(resp, JSINT "}", TAG_TRSVCID,
-			    (u64) atoi(iface->port));
+				(u64) atoi(iface->port));
 		resp += n;
 	}
 
@@ -185,17 +186,146 @@ static int handle_dem_requests(char *verb, struct http_message *hm, char *resp)
 	return ret;
 }
 
+static int get_redfish_request(struct http_message *hm, char **p,
+				int n, char *query, char **resp)
+{
+//	char			*uri = NULL;
+//	char			*uri_path = NULL;
+//	char			 query[32] = { 0 };
+	char			 data[LARGE_RSP + 1];
+	int			 ret = 0;
+
+	UNUSED(p);
+	UNUSED(n);
+	UNUSED(resp);
+
+//	uri = malloc(hm->uri.len + 1);
+//	memcpy(uri, (char *) hm->uri.p, hm->uri.len);
+
+//	uri_path = malloc(hm->uri.len + 1 + sizeof(PATH_NVMF_DEM_REDFISH));
+//	sprintf(uri_path, "%s%s",PATH_NVMF_DEM_REDFISH, uri);
+
+	memset(data, 0, sizeof(data));
+	strncpy(data, hm->body.p, min(LARGE_RSP, hm->body.len));
+
+	if (hm->query_string.len)
+		strncpy(query, hm->query_string.p,
+			min(hm->query_string.len, sizeof(query) - 1));
+
+	if ((strncmp(query, URI_PARM_MODE, PARM_MODE_LEN) == 0)
+		&& (query[PARM_MODE_LEN]))
+		ret = list_json_target(query, resp);
+	else if ((strncmp(query, URI_PARM_FABRIC, PARM_FABRIC_LEN) == 0)
+			&& (query[PARM_FABRIC_LEN]))
+		ret = list_json_target(query, resp);
+	else
+		ret = list_json_redfish(NULL, data, resp);
+	//Check the path in the uri and get the details
+/*	if (uri) {
+		ret = list_json_redfish_basic(uri_path, resp);
+	} else
+		ret = bad_request(*resp);
+*/
+	return http_error(ret);
+}
+
+static int put_redfish_request(char *target, char **p, int n,
+				struct mg_str *body, char *resp)
+{
+	UNUSED(target);
+	UNUSED(p);
+	UNUSED(n);
+	UNUSED(body);
+	UNUSED(resp);
+
+	return 0;
+}
+
+static int delete_redfish_request(char *target, char **p, int n,
+				struct mg_str *body, char *resp)
+{
+	UNUSED(target);
+	UNUSED(p);
+	UNUSED(n);
+	UNUSED(body);
+	UNUSED(resp);
+
+	return 0;
+}
+
+static int post_redfish_request(char *target, char **p, int n,
+				struct mg_str *body, char *resp)
+{
+	UNUSED(target);
+	UNUSED(p);
+	UNUSED(n);
+	UNUSED(body);
+	UNUSED(resp);
+
+	return 0;
+}
+
+//static int patch_redfish_request(char *target, char **p, int n,
+//                             struct mg_str *body, char *resp)
+static int patch_redfish_request(struct http_message *hm, char **p,
+				int n, char *query, char **resp)
+{
+//	UNUSED(target);
+//	UNUSED(p);
+//	UNUSED(n);
+//	UNUSED(body);
+//	UNUSED(resp);
+//	char			*uri = NULL;
+//	char			*uri_path = NULL;
+//	char			 query[32] = { 0 };
+	char			 data[LARGE_RSP + 1];
+	int			 ret = 0;
+
+	UNUSED(p);
+	UNUSED(n);
+	UNUSED(resp);
+
+//	uri = malloc(hm->uri.len + 1);
+//	memcpy(uri, (char *) hm->uri.p, hm->uri.len);
+
+//	uri_path = malloc(hm->uri.len + 1 + sizeof(PATH_NVMF_DEM_REDFISH));
+//	sprintf(uri_path, "%s%s",PATH_NVMF_DEM_REDFISH, uri);
+
+	memset(data, 0, sizeof(data));
+	strncpy(data, hm->body.p, min(LARGE_RSP, hm->body.len));
+
+	if (hm->query_string.len)
+		strncpy(query, hm->query_string.p,
+			min(hm->query_string.len, sizeof(query) - 1));
+
+	if ((strncmp(query, URI_PARM_MODE, PARM_MODE_LEN) == 0)
+		&& (query[PARM_MODE_LEN]))
+		ret = list_json_target(query, resp);
+	else if ((strncmp(query, URI_PARM_FABRIC, PARM_FABRIC_LEN) == 0)
+		&& (query[PARM_FABRIC_LEN]))
+		ret = list_json_target(query, resp);
+	else
+		ret = list_json_redfish(NULL, data, resp);
+	//Check the path in the uri and get the details
+/*	if (uri) {
+		ret = list_json_redfish_basic(uri_path, resp);
+	} else
+		ret = bad_request(*resp);
+*/
+	return http_error(ret);
+}
+
 static int get_target_request(char *target, char **p, int n, char *query,
-			      char **resp)
+				char **resp)
 {
 	int			 ret;
 
 	if (!target || !*target) {
 		if ((strncmp(query, URI_PARM_MODE, PARM_MODE_LEN) == 0)
-		    && (query[PARM_MODE_LEN]))
+			&& (query[PARM_MODE_LEN]))
 			ret = list_json_target(query, resp);
 		else if ((strncmp(query, URI_PARM_FABRIC, PARM_FABRIC_LEN) == 0)
-			 && (query[PARM_FABRIC_LEN]))
+			&& (query[PARM_FABRIC_LEN]))
 			ret = list_json_target(query, resp);
 		else
 			ret = list_json_target(NULL, resp);
@@ -216,7 +346,7 @@ static int get_target_request(char *target, char **p, int n, char *query,
 }
 
 static int delete_target_request(char *target, char **p, int n,
-				 struct mg_str *body, char *resp)
+					struct mg_str *body, char *resp)
 {
 	char			 data[LARGE_RSP + 1];
 	int			 portid;
@@ -258,7 +388,7 @@ bad_req:
 }
 
 static int put_target_request(char *target, char **p, int n,
-			      struct mg_str *body, char *resp)
+				struct mg_str *body, char *resp)
 {
 	char			 data[LARGE_RSP + 1];
 	int			 portid;
@@ -307,7 +437,7 @@ bad_req:
 }
 
 static int post_target_request(char *target, char **p, int n,
-			       struct mg_str *body, char *resp)
+				struct mg_str *body, char *resp)
 {
 	char			 data[SMALL_RSP + 1];
 	int			 ret;
@@ -319,7 +449,7 @@ static int post_target_request(char *target, char **p, int n,
 		if (n) {
 			if (strcmp(*p, URI_SUBSYSTEM) == 0)
 				ret = set_subsys(target,
-						 p[1], data, resp);
+						p[1], data, resp);
 			else
 				ret = -EINVAL;
 
@@ -402,7 +532,7 @@ out:
 }
 
 static int handle_target_requests(char *p[], int n, struct http_message *hm,
-				  char **resp)
+					char **resp)
 {
 	char			*target;
 	char			 query[32] = { 0 };
@@ -515,7 +645,7 @@ static int post_host_request(char *host, int n, struct mg_str *body, char *resp)
 }
 
 static int patch_host_request(char *host, char **p, int n, struct mg_str *body,
-			      char *resp)
+				char *resp)
 {
 	char			 data[SMALL_RSP + 1];
 	int			 ret;
@@ -559,7 +689,7 @@ static int get_group_request(char *group, char **resp)
 	return http_error(ret);
 }
 static int put_group_request(char *group, char **p, int n, struct mg_str *body,
-			     char *resp)
+				char *resp)
 {
 	char			 data[LARGE_RSP + 1];
 	int			 ret;
@@ -571,10 +701,10 @@ static int put_group_request(char *group, char **p, int n, struct mg_str *body,
 		ret = update_group(group, data, resp);
 	else if (strcmp(*p, URI_HOST) == 0)
 		ret = set_group_member(group, data, NULL, TAG_HOST,
-				       TAG_HOSTS, resp);
+					TAG_HOSTS, resp);
 	else if (strcmp(*p, URI_TARGET) == 0)
 		ret = set_group_member(group, data, NULL, TAG_TARGET,
-				       TAG_TARGETS, resp);
+					TAG_TARGETS, resp);
 	else
 		ret = bad_request(resp);
 
@@ -594,10 +724,10 @@ static int post_group_request(char *group, char **p, int n, char *resp)
 		ret = add_group(group, resp);
 	else if (n == 4 && strcmp(*p, URI_HOST) == 0)
 		ret = set_group_member(group, NULL, *++p, TAG_HOST,
-				       TAG_HOSTS, resp);
+					TAG_HOSTS, resp);
 	else if (n == 4 && strcmp(*p, URI_TARGET) == 0)
 		ret = set_group_member(group, NULL, *++p, TAG_TARGET,
-				       TAG_TARGETS, resp);
+					TAG_TARGETS, resp);
 	else
 		ret = bad_request(resp);
 
@@ -619,7 +749,7 @@ static int delete_group_request(char *group, char **p, int n, char *resp)
 		ret = del_group_member(group, p[1], TAG_HOST, TAG_HOSTS, resp);
 	else if (strcmp(*p, URI_TARGET) == 0)
 		ret = del_group_member(group, p[1], TAG_TARGET, TAG_TARGETS,
-				       resp);
+					resp);
 	else
 		ret = bad_request(resp);
 
@@ -649,38 +779,100 @@ static int patch_group_request(char *group, struct mg_str *body, char *resp)
 }
 
 static int handle_redfish_requests(char *p[], int n, struct http_message *hm,
-				 char **resp)
+					char **resp)
 {
 //	char			*redfish;
+	json_t			*sf_root;
+	json_error_t		 error;
 	int			 ret = 0;
+	char			*uri = NULL;
+	char			*uri_path = NULL;
+	char			*target;
+	char			 query[32] = { 0 };
+	struct json_context     *ctx = get_json_context();
+	char			 index_file[] = "index.json";
+	struct stat		 sb;
 
-	UNUSED(p);
 	UNUSED(n);
 	UNUSED(hm);
-	UNUSED(resp);
+//	UNUSED(resp);
 
 
-//	ret = parse_redfish_uri_path(p, n, hm, &resp);
-	/* this will get the sysfs file path */
+	uri = malloc(hm->uri.len + 2);
+	if (!uri)
+		return -1;
+	memset(uri, 0, hm->uri.len + 2);
+	memcpy(uri, (char *) hm->uri.p, hm->uri.len);
 
-/*	if (is_equal(&hm->method, &s_get_method))
-		ret = get_redfish_request(group, resp);
-	else if (is_equal(&hm->method, &s_put_method))
-		ret = put_redfish_request(group, p, n, &hm->body, *resp);
+	if (!(strcmp(uri, "/redfish")) || !(strcmp(uri, "/redfish/"))) {
+		ret = sprintf(*resp, "{ \n \"v1\": \"/redfish/v1/\" \n } \n");
+		return 200;
+	//	return ret;
+	}
+
+	uri_path = malloc(hm->uri.len + 1 + sizeof(PATH_NVMF_DEM_REDFISH) +
+			sizeof(index_file));
+	sprintf(uri_path, "%s%s/%s", PATH_NVMF_DEM_REDFISH, uri, index_file);
+
+	ctx->sf_filename = malloc(hm->uri.len + 1 +
+			sizeof(PATH_NVMF_DEM_REDFISH) +	sizeof(index_file));
+	sprintf(ctx->sf_filename, "%s%s/%s", PATH_NVMF_DEM_REDFISH,
+			uri, index_file);
+//	printf("\n uri %s \n file name is %s \n",uri,ctx->sf_filename);
+//	printf("hm->uri.p %s hm->uri.len %ld\n ",hm->uri.p, hm->uri.len);
+
+	free(uri);
+
+	if (stat(ctx->sf_filename, &sb) == -1) {
+		strcpy(*resp, "URI Path Not Valid\n");
+		ret = HTTP_ERR_NOT_IMPLEMENTED;
+		goto out;
+	}
+
+	sf_root = json_load_file(ctx->sf_filename, JSON_DECODE_ANY, &error);
+	if (!sf_root) {
+		printf("\n ERR: Json could not load the index file ");
+		sf_root = json_object();
+	}
+	ctx->sf_root = sf_root;
+
+	target = p[1];
+//	p += 2;
+//	n = (n > 2) ? n - 2 : 0;
+
+	if (hm->query_string.len)
+		strncpy(query, hm->query_string.p,
+			min(hm->query_string.len, sizeof(query) - 1));
+
+	if (is_equal(&hm->method, &s_get_method)) {
+		if (!(strcmp(uri, "/redfish")) ||
+				!(strcmp(uri, "/redfish/"))) {
+			ret = sprintf(*resp, "{ \n \"v1\": \"/redfish/v1/\" \n } \n");
+			return ret;
+		} else
+			ret = get_redfish_request(hm, p, n, query, resp);
+	} else if (is_equal(&hm->method, &s_put_method))
+		ret = put_redfish_request(target, p, n, &hm->body, *resp);
 	else if (is_equal(&hm->method, &s_delete_method))
-		ret = delete_redfish_request(group, p, n, *resp);
+		ret = delete_redfish_request(target, p, n, &hm->body, *resp);
 	else if (is_equal(&hm->method, &s_post_method))
-		ret = post_redfish_request(group, p, n, *resp);
+		ret = post_redfish_request(target, p, n, &hm->body, *resp);
 	else if (is_equal(&hm->method, &s_patch_method))
-		ret = patch_redfish_request(group, &hm->body, *resp);
+		ret = patch_redfish_request(hm, p, n, query, resp);
+//		ret = patch_redfish_request(target, p, n, &hm->body, *resp);
 	else
 		ret = bad_request(*resp);
-*/
-	return ret;
 
+out:
+//	free(uri);
+	free(uri_path);
+	free(ctx->sf_filename);
+
+	return ret;
 }
+
 static int handle_group_requests(char *p[], int n, struct http_message *hm,
-				 char **resp)
+					char **resp)
 {
 	char			*group;
 	int			 ret;
@@ -739,6 +931,7 @@ void handle_http_request(struct mg_connection *c, void *ev_data)
 	struct http_message	*hm = (struct http_message *) ev_data;
 	char			*resp = NULL;
 	char			*uri = NULL;
+	char			*uri1 = NULL;
 	char			*parts[MAX_DEPTH] = { NULL };
 	int			 ret;
 	int			 i, n;
@@ -764,16 +957,17 @@ void handle_http_request(struct mg_connection *c, void *ev_data)
 	}
 
 	print_debug("%.*s %.*s", (int) hm->method.len, hm->method.p,
-		    (int) hm->uri.len, hm->uri.p);
+			(int) hm->uri.len, hm->uri.p);
 
 	for (i = 0; i < MG_MAX_HTTP_HEADERS; i++)
 		if (is_equal(&hm->header_names[i], &s_authorization))
 			break;
 
 	if ((i < MG_MAX_HTTP_HEADERS) &&
-	    (!is_equal(&hm->header_values[i], s_signature))) {
-		ret = HTTP_ERR_FORBIDDEN;
-		goto out;
+		(!is_equal(&hm->header_values[i], s_signature))) {
+		printf("Error: signature - Raj ");
+		//ret = HTTP_ERR_FORBIDDEN;
+		//goto out;
 	}
 
 	if (hm->body.len)
@@ -788,6 +982,15 @@ void handle_http_request(struct mg_connection *c, void *ev_data)
 		goto out;
 	}
 	memcpy(uri, (char *) hm->uri.p, hm->uri.len);
+
+	uri1 = malloc(hm->uri.len + 1);
+	if (!uri1) {
+		strcpy(resp, "No memory!");
+		ret = HTTP_ERR_INTERNAL;
+		goto out;
+	}
+	memcpy(uri1, (char *) hm->uri.p, hm->uri.len);
+
 	uri[hm->uri.len] = 0;
 
 	n = parse_uri(uri, MAX_DEPTH, parts);
@@ -796,7 +999,7 @@ void handle_http_request(struct mg_connection *c, void *ev_data)
 
 	if (strncmp(parts[0], URI_DEM, DEM_LEN) == 0)
 		ret = handle_dem_requests(parts[1], hm, resp);
-	else if (strncmp(parts[0], URI_V1, V1_LEN) == 0) {
+	else if (strncmp(parts[0], URI_REDFISH, REDFISH_LEN) == 0) {
 		ret = handle_redfish_requests(parts, n, hm, &resp);
 	}
 	else if (strncmp(parts[0], URI_GROUP, GROUP_LEN) == 0)
@@ -818,15 +1021,17 @@ out:
 		mg_printf(c, "%s %d OK\r\n%s", HTTP_HDR, HTTP_OK, HTTP_ALLOW);
 	else if (ret == -1)
 		mg_printf(c, "%s %d OK\r\n%s\r\n%s", HTTP_HDR, HTTP_OK,
-			  HTTP_ALLOW, HTTP_ALLOW_CONTROL);
+				HTTP_ALLOW, HTTP_ALLOW_CONTROL);
 	else if (resp)
-		mg_printf(c, "%s %d\r\n%s\r\n%s", HTTP_HDR, ret, resp,
-			  HTTP_ALLOW);
+//		mg_printf(c, "%s %d\r\n%s\r\n%s", HTTP_HDR, ret, resp,
+		mg_printf(c, "%s %d OK\r\n%s\r\n%s", HTTP_HDR, HTTP_OK, resp,
+				HTTP_ALLOW);
 	else
 		mg_printf(c, "%s %d\r\nInternal Error\r\n%s", HTTP_HDR, ret,
-			  HTTP_ALLOW);
+				HTTP_ALLOW);
 
-	mg_printf(c, "\r\nContent-Type: plain/text");
+//	mg_printf(c, "\r\nContent-Type: plain/text");
+	mg_printf(c, "\r\nContent-Type: application/json");
 	if (resp) {
 		mg_printf(c, "\r\nContent-Length: %ld\r\n", strlen(resp));
 		mg_printf(c, "\r\n%s\r\n\r\n", resp);
@@ -838,6 +1043,8 @@ out:
 
 	if (uri)
 		free(uri);
+	if (uri1)
+		free(uri1);
 
 	c->flags = MG_F_SEND_AND_CLOSE;
 
