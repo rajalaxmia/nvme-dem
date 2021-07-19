@@ -659,10 +659,10 @@ static int handle_redfish_requests(char *p[], int n, struct http_message *hm,
 	UNUSED(hm);
 	UNUSED(resp);
 
-	
+
 //	ret = parse_redfish_uri_path(p, n, hm, &resp);
 	/* this will get the sysfs file path */
-	
+
 /*	if (is_equal(&hm->method, &s_get_method))
 		ret = get_redfish_request(group, resp);
 	else if (is_equal(&hm->method, &s_put_method))
@@ -677,7 +677,7 @@ static int handle_redfish_requests(char *p[], int n, struct http_message *hm,
 		ret = bad_request(*resp);
 */
 	return ret;
-	
+
 }
 static int handle_group_requests(char *p[], int n, struct http_message *hm,
 				 char **resp)
