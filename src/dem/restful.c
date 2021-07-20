@@ -965,7 +965,7 @@ void handle_http_request(struct mg_connection *c, void *ev_data)
 
 	if ((i < MG_MAX_HTTP_HEADERS) &&
 		(!is_equal(&hm->header_values[i], s_signature))) {
-		printf("Error: signature - Raj ");
+		printf("Warn: signature  ");
 		//ret = HTTP_ERR_FORBIDDEN;
 		//goto out;
 	}

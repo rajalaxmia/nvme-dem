@@ -116,7 +116,7 @@ static inline void gen_uuid(char *uuid)
 
 #define PATH_NVME_FABRICS	"/dev/nvme-fabrics"
 #define PATH_NVMF_DEM_DISC	"/etc/nvme/nvmeof-dem/"
-#define PATH_NVMF_DEM_REDFISH	"/home/raj"
+#define PATH_NVMF_DEM_REDFISH	"/home/dem"
 #define NUM_CONFIG_ITEMS	3
 #define CONFIG_TYPE_SIZE	8
 #define CONFIG_FAMILY_SIZE	8
