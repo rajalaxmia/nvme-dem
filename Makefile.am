@@ -365,17 +365,3 @@ sparse:
 	for i in src/*/*.c ; do sparse $$i ${SPARSE_OPTS} ; done
 	echo Done.
 
-kw.cfg:
-	rm -rf .kw*
-	echo creating klocwork project
-	~/klocwork/kw-client/bin/kwcheck create
-	echo rebuilding for klocwork
-	MG_DIR=files \
-	  KWWRAP="~/klocwork/kw-client/bin/kwwrap -o /tmp/klocwork.out " make
-	~/klocwork/kw-client/bin/kwinject -t /tmp/klocwork.out -o kw.cfg
-	rm /tmp//klocwork.out
-
-klocwork: kw.cfg
-	echo generating klocwork report
-	~/klocwork/kw-client/bin/kwcheck run -b kw.cfg > klocwork.out
-	echo klocwork output in klocwork.out
